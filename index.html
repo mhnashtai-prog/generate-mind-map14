@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Synonym Mind Map Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #f0f4f8, #e3eaf3);
+      min-height: 100vh;
+      padding: 20px;
+      color: #2d3748;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 20px auto;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+      padding: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 0 15px;
+    }
+
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 12px;
+      font-size: 2.4rem;
+      background: linear-gradient(90deg, #4a5568, #2b6cb0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: #4a5568;
+      font-size: 1.1rem;
+      max-width: 700px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .input-area {
+      background: #f7fafc;
+      border-radius: 14px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.03);
+      border: 1px solid #e2e8f0;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 15px;
+    }
+
+    .input-group {
+      flex: 1;
+      min-width: 300px;
+      max-width: 600px;
+      position: relative;
+    }
+
+    #wordInput {
+      width: 100%;
+      padding: 16px 22px;
+      font-size: 1.15rem;
+      border-radius: 12px;
+      border: 2px solid #cbd5e0;
+      outline: none;
+      transition: all 0.3s;
+      background: #fff;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+    }
+
+    #wordInput:focus {
+      border-color: #63b3ed;
+      box-shadow: 0 0 0 4px rgba(99, 179, 237, 0.2);
+    }
+
+    #wordInput::placeholder {
+      color: #a0aec0;
+    }
+
+    .btn {
+      padding: 16px 38px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    #generateBtn {
+      background: linear-gradient(to right, #4299e1, #3182ce);
+      color: white;
+    }
+
+    #generateBtn:hover {
+      background: linear-gradient(to right, #3182ce, #2b6cb0);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+    }
+
+    #generateBtn:active {
+      transform: translateY(0);
+    }
+
+    #clearBtn {
+      background: #fff;
+      color: #4a5568;
+      border: 2px solid #e2e8f0;
+    }
+
+    #clearBtn:hover {
+      background: #edf2f7;
+      border-color: #cbd5e0;
+    }
+
+    #mindMapArea {
+      position: relative;
+      width: 100%;
+      min-height: 600px;
+      background: #fafcff;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #a0aec0;
+      padding: 40px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .empty-state i {
+      font-size: 4.5rem;
+      margin-bottom: 25px;
+      color: #cbd5e0;
+      opacity: 0.7;
+    }
+
+    .empty-state h2 {
+      font-size: 2rem;
+      margin-bottom: 18px;
+      color: #4a5568;
+      font-weight: 600;
+    }
+
+    .empty-state p {
+      font-size: 1.15rem;
+      line-height: 1.7;
+    }
+
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 25px;
+      padding: 40px;
+    }
+
+    .spinner {
+      width: 70px;
+      height: 70px;
+      border: 6px solid rgba(66, 153, 225, 0.15);
+      border-top: 6px solid #4299e1;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .center-word {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      background: linear-gradient(135deg, #f6e05e, #ecc94b);
+      color: #2d3748;
+      font-weight: 800;
+      border-radius: 50px;
+      box-shadow: 0 10px 30px rgba(236, 201, 75, 0.3);
+      font-size: 1.8rem;
+      padding: 26px 48px;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 20;
+      transition: all 0.4s ease-out;
+      animation: pulse 3s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 10px 30px rgba(236, 201, 75, 0.3); }
+      50% { transform: translate(-50%, -50%) scale(1.05); box-shadow: 0 15px 40px rgba(236, 201, 75, 0.4); }
+      100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 10px 30px rgba(236, 201, 75, 0.3); }
+    }
+
+    .synonym-node {
+      position: absolute;
+      width: 260px;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      padding: 22px;
+      text-align: center;
+      z-index: 10;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transform: scale(0.95);
+      opacity: 0;
+      cursor: pointer;
+      border: 1px solid #edf2f7;
+    }
+
+    .synonym-node.visible {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    .synonym-node:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+      z-index: 30;
+    }
+
+    .synonym-label {
+      display: inline-block;
+      font-weight: 700;
+      border-radius: 12px;
+      padding: 10px 20px;
+      margin-bottom: 15px;
+      font-size: 1.25rem;
+      color: white;
+      transition: transform 0.2s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      min-width: 80%;
+    }
+
+    .synonym-node:hover .synonym-label {
+      transform: translateY(-4px);
+    }
+
+    .example {
+      font-size: 1rem;
+      margin-top: 15px;
+      color: #4a5568;
+      padding: 15px;
+      border-radius: 12px;
+      background: #f8fafc;
+      line-height: 1.6;
+      transition: all 0.3s;
+      text-align: left;
+      border-left: 3px solid #cbd5e0;
+    }
+
+    .synonym-node:hover .example {
+      background: #edf2f7;
+      border-left-color: #4299e1;
+    }
+
+    .example strong {
+      color: #2b6cb0;
+      font-weight: 600;
+    }
+
+    .example em {
+      color: #e53e3e;
+      font-style: italic;
+      font-weight: 500;
+    }
+
+    svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .instructions {
+      background: #ebf8ff;
+      border-radius: 16px;
+      padding: 28px;
+      margin-top: 35px;
+      border-left: 5px solid #4299e1;
+    }
+
+    .instructions h3 {
+      color: #2b6cb0;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.4rem;
+    }
+
+    .instructions ul {
+      padding-left: 30px;
+    }
+
+    .instructions li {
+      margin-bottom: 15px;
+      line-height: 1.7;
+      font-size: 1.05rem;
+    }
+
+    .instructions li strong {
+      color: #2b6cb0;
+    }
+
+    .error-message {
+      text-align: center;
+      padding: 40px;
+      color: #e53e3e;
+    }
+
+    .error-message i {
+      font-size: 3.5rem;
+      margin-bottom: 25px;
+      opacity: 0.8;
+    }
+
+    .error-message h2 {
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+      line-height: 1.4;
+    }
+
+    .error-message p {
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 35px;
+      color: #718096;
+      font-size: 1rem;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 900px) {
+      .container {
+        padding: 25px 20px;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .input-row {
+        flex-direction: column;
+      }
+      
+      .input-group {
+        min-width: 100%;
+      }
+      
+      .btn {
+        width: 100%;
+        padding: 16px;
+      }
+      
+      .center-word {
+        font-size: 1.5rem;
+        padding: 20px 35px;
+      }
+      
+      #mindMapArea {
+        min-height: 500px;
+      }
+      
+      .synonym-node {
+        width: 220px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 10px auto;
+        padding: 20px 15px;
+      }
+      
+      h1 {
+        font-size: 1.8rem;
+      }
+      
+      .subtitle {
+        font-size: 1rem;
+      }
+      
+      .input-area {
+        padding: 20px 15px;
+      }
+      
+      #wordInput {
+        padding: 14px 18px;
+        font-size: 1.05rem;
+      }
+      
+      .center-word {
+        font-size: 1.3rem;
+        padding: 16px 30px;
+      }
+      
+      #mindMapArea {
+        min-height: 450px;
+      }
+      
+      .synonym-node {
+        width: 90%;
+        max-width: 280px;
+      }
+      
+      .synonym-label {
+        font-size: 1.15rem;
+        padding: 8px 16px;
+      }
+      
+      .example {
+        font-size: 0.95rem;
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><i class="fas fa-network-wired"></i> Synonym Mind Map Generator</h1>
+      <p class="subtitle">Explore word relationships and expand your vocabulary with this interactive visualization tool</p>
+    </header>
+    
+    <div class="input-area">
+      <div class="input-row">
+        <div class="input-group">
+          <input type="text" id="wordInput" placeholder="Enter a word (e.g., 'courage', 'innovation')" maxlength="32" autofocus>
+        </div>
+        <button id="generateBtn"><i class="fas fa-sync-alt"></i> GENERATE</button>
+        <button id="clearBtn"><i class="fas fa-eraser"></i> CLEAR</button>
+      </div>
+    </div>
+    
+    <div id="mindMapArea">
+      <div class="empty-state">
+        <i class="fas fa-project-diagram"></i>
+        <h2>Visualize Word Relationships</h2>
+        <p>Enter any English word to generate an interactive mind map of its synonyms, complete with real-world usage examples to help you understand context and meaning.</p>
+      </div>
+    </div>
+    
+    <div class="instructions">
+      <h3><i class="fas fa-lightbulb"></i> How to Use This Learning Tool</h3>
+      <ul>
+        <li><strong>Enter a word</strong> - Type any English word in the input field above</li>
+        <li><strong>Generate mind map</strong> - Click the blue button to create your visualization</li>
+        <li><strong>Explore relationships</strong> - Hover over nodes to see detailed examples</li>
+        <li><strong>Contextual learning</strong> - Each synonym includes a real-world usage example</li>
+        <li><strong>Reset anytime</strong> - Use the clear button to start over with a new word</li>
+      </ul>
+    </div>
+    
+    <footer>
+      <p>Educational Tool &copy; 2023 | Designed for Vocabulary Development</p>
+    </footer>
+  </div>
+
+  <script>
+    const colorList = [
+      '#4299e1', // blue
+      '#48bb78', // green
+      '#ed8936', // orange
+      '#ecc94b', // yellow
+      '#ed64a6', // pink
+      '#9f7aea', // purple
+      '#0bc5ea', // cyan
+      '#a0aec0', // gray
+      '#f56565', // red
+      '#38b2ac', // teal
+      '#b7791f', // gold
+      '#805ad5'  // indigo
+    ];
+    
+    // Improved real-world example templates
+    const exampleTemplates = [
+      'In medical contexts, <strong>{syn}</strong> refers to the same concept as <em>{word}</em>. For example: "The patient suffered damage to their vertebral {syn}."',
+      'In literature, authors often use <strong>{syn}</strong> as an alternative to <em>{word}</em>. Example: "The novel\'s {syn} kept readers engaged from start to finish."',
+      'In everyday conversation, you might say: "I need to strengthen my {syn}" instead of "I need to strengthen my <em>{word}</em>."',
+      'In scientific writing: "The research focused on the cellular structure of the {syn}" can replace "the cellular structure of the <em>{word}</em>."',
+      'In educational materials: "The textbook explained the function of the {syn} in detail" is equivalent to "the function of the <em>{word}</em>."',
+      'In journalism: "The report highlighted issues with the country\'s economic {syn}" serves the same purpose as "economic <em>{word}</em>."',
+      'In business contexts: "A strong organizational {syn} is crucial for success" parallels "a strong organizational <em>{word}</em>."',
+      'In creative writing: "Her artistic {syn} was evident in every brushstroke" can substitute for "artistic <em>{word}</em>."',
+      'In technical documentation: "The {syn} of the framework provides critical support" is synonymous with "the <em>{word}</em> of the framework."',
+      'In historical texts: "The empire\'s cultural {syn} influenced neighboring regions" mirrors "cultural <em>{word}</em>."',
+      'In psychology papers: "The study examined the emotional {syn} of participants" instead of "emotional <em>{word}</em>."',
+      'In sports commentary: "The team showed incredible {syn} throughout the tournament" replaces "incredible <em>{word}</em>."'
+    ];
+    
+    // DOM Elements
+    const wordInput = document.getElementById('wordInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const mindMapArea = document.getElementById('mindMapArea');
+    
+    // Cache to store previous results
+    const wordCache = new Map();
+    let isFetching = false;
+    
+    // Event Listeners
+    generateBtn.addEventListener('click', generateMindMap);
+    clearBtn.addEventListener('click', clearMindMap);
+    wordInput.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') generateMindMap();
+    });
+    
+    // Generate the mind map
+    async function generateMindMap() {
+      const word = wordInput.value.trim().toLowerCase();
+      
+      // Validate input
+      if (!word) {
+        showError('Please enter a word to generate a mind map');
+        return;
+      }
+      
+      if (!/^[a-zA-Z]+$/.test(word)) {
+        showError('Please enter a valid English word (letters only)');
+        return;
+      }
+      
+      if (isFetching) return;
+      isFetching = true;
+      
+      // Show loading state
+      mindMapArea.innerHTML = `
+        <div class="loading">
+          <div class="spinner"></div>
+          <h2>Building Mind Map for "${word}"</h2>
+          <p>Discovering meaningful synonyms and real-world examples...</p>
+        </div>
+      `;
+      
+      try {
+        let synonyms;
+        
+        // Check cache first
+        if (wordCache.has(word)) {
+          synonyms = wordCache.get(word);
+        } else {
+          // Fetch from API
+          synonyms = await fetchSynonyms(word);
+          
+          // Filter duplicates and limit to 12
+          synonyms = synonyms.filter((w, i, a) => 
+            i === a.findIndex(({word: b}) => b.toLowerCase() === w.word.toLowerCase())
+          ).slice(0, 12);
+          
+          // Cache the result
+          wordCache.set(word, synonyms);
+        }
+        
+        // Display results
+        if (synonyms.length === 0) {
+          showError(`No synonyms found for "<b>${word}</b>". Try a different word.`);
+        } else {
+          drawMindMap(word, synonyms);
+        }
+      } catch (error) {
+        console.error('Error fetching synonyms:', error);
+        showError('Failed to fetch synonyms. Please check your connection and try again.');
+      } finally {
+        isFetching = false;
+      }
+    }
+    
+    // Fetch synonyms from API
+    async function fetchSynonyms(word) {
+      try {
+        const response = await fetch(`https://api.datamuse.com/words?rel_syn=${encodeURIComponent(word)}`);
+        
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+        
+        return await response.json();
+      } catch (error) {
+        throw error;
+      }
+    }
+    
+    // Draw the mind map visualization with improved layout
+    function drawMindMap(mainWord, synonyms) {
+      mindMapArea.innerHTML = '';
+      
+      // Calculate dimensions
+      const w = mindMapArea.offsetWidth;
+      const h = Math.max(600, mindMapArea.offsetHeight);
+      
+      // Create central node
+      const center = document.createElement('div');
+      center.className = 'center-word';
+      center.innerText = mainWord;
+      center.style.left = '50%';
+      center.style.top = '50%';
+      mindMapArea.appendChild(center);
+      
+      // Create synonym nodes
+      const radius = Math.min(w, h) / 2.8; // Increased radius for better spacing
+      const cx = w / 2;
+      const cy = h / 2;
+      const angleStep = (2 * Math.PI) / synonyms.length;
+      
+      const nodes = [];
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', w);
+      svg.setAttribute('height', h);
+      mindMapArea.appendChild(svg);
+      
+      // Create nodes and lines after a slight delay for animation
+      setTimeout(() => {
+        // Draw connecting lines
+        for (let i = 0; i < synonyms.length; i++) {
+          const theta = -Math.PI/2 + i * angleStep;
+          const x = cx + Math.cos(theta) * radius;
+          const y = cy + Math.sin(theta) * radius;
+          
+          // Create SVG line
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', cx);
+          line.setAttribute('y1', cy);
+          line.setAttribute('x2', x);
+          line.setAttribute('y2', y);
+          line.setAttribute('stroke', '#cbd5e0');
+          line.setAttribute('stroke-width', '3');
+          line.setAttribute('stroke-dasharray', '500');
+          line.setAttribute('stroke-dashoffset', '500');
+          svg.appendChild(line);
+          
+          // Animate line drawing
+          setTimeout(() => {
+            line.style.transition = 'stroke-dashoffset 1s ease-out';
+            line.setAttribute('stroke-dashoffset', '0');
+          }, 100 + i * 100);
+        }
+        
+        // Create synonym nodes with improved positioning algorithm
+        for (let i = 0; i < synonyms.length; i++) {
+          const synonym = synonyms[i].word;
+          const theta = -Math.PI/2 + i * angleStep;
+          
+          // Add slight randomness to prevent perfect alignment
+          const randOffset = 0.1 + Math.random() * 0.1;
+          const x = cx + Math.cos(theta) * (radius * randOffset);
+          const y = cy + Math.sin(theta) * (radius * randOffset);
+          
+          const node = document.createElement('div');
+          node.className = 'synonym-node';
+          node.style.left = `${x - 130}px`; // Center the node
+          node.style.top = `${y - 110}px`; // Center the node
+          node.style.zIndex = '10';
+          
+          // Label
+          const label = document.createElement('span');
+          label.className = 'synonym-label';
+          label.style.background = colorList[i % colorList.length];
+          label.innerText = synonym;
+          node.appendChild(label);
+          
+          // Real-world example sentence
+          const ex = document.createElement('div');
+          ex.className = 'example';
+          const template = exampleTemplates[i % exampleTemplates.length];
+          ex.innerHTML = template.replace(/{syn}/g, `<strong>${synonym}</strong>`)
+                               .replace(/{word}/g, `<em>${mainWord}</em>`);
+          node.appendChild(ex);
+          
+          mindMapArea.appendChild(node);
+          nodes.push({x, y, el: node});
+          
+          // Animate node appearance
+          setTimeout(() => {
+            node.classList.add('visible');
+          }, 600 + i * 120);
+        }
+      }, 100);
+    }
+    
+    // Show error message
+    function showError(message) {
+      mindMapArea.innerHTML = `
+        <div class="error-message">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h2>${message}</h2>
+          <p>Try common words like "strong", "beautiful", or "intelligent"</p>
+        </div>
+      `;
+    }
+    
+    // Clear the mind map
+    function clearMindMap() {
+      wordInput.value = '';
+      wordInput.focus();
+      mindMapArea.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-project-diagram"></i>
+          <h2>Visualize Word Relationships</h2>
+          <p>Enter any English word to generate an interactive mind map of its synonyms, complete with real-world usage examples to help you understand context and meaning.</p>
+        </div>
+      `;
+    }
+    
+    // Initialize with a sample word
+    setTimeout(() => {
+      wordInput.value = 'courage';
+      generateMindMap();
+    }, 1500);
+  </script>
+</body>
+</html>
